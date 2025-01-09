@@ -112,7 +112,7 @@
         name: "{{ security_group_name }}"
         description: allow
         tags:
-          Name: bhargavi-sg
+          Name: vasanthi-sg
         rules:
         - proto: all
           cidr_ip: 0.0.0.0/0
@@ -159,14 +159,14 @@ title: "ARTH"
 
 # VPC configuration
 #
-vpc_name: bhargavi_vpc
+vpc_name: unguturi_vpc
 vpc_cidr_block: '11.0.0.0/16'
 region: "us-east-1"
 
 
 # Internet Gateway configuration
 #
-igw_name: bhargavi_igw
+igw_name: unguturi_igw
 
 # Public Subnet configuration
 #
@@ -176,21 +176,21 @@ pubzone: "us-east-1a"
 
 # Private Subnet configuration
 #
-pvtsubnet_name: bhargavi_pvt
+pvtsubnet_name: unguturi_pvt
 pvtsubnet_cidr_block: '11.0.2.0/24'
 pvtzone: "us-east-1b"
 
 # Public Route Table configuration
 #
-pubroute_table_name: bhargavi_pub_rt
+pubroute_table_name: unguturi_pub_rt
 
 # Private Route Table configuration
 #
-pvtroute_table_name: bhargavi_pvt_rt
+pvtroute_table_name: unguturi_pvt_rt
 
 # Security Group configuration
 #
-security_group_name: bhargavi_sg
+security_group_name: unguturi_sg
 destination_cidr_block: '0.0.0.0/0'
 port22_cidr_block: '0.0.0.0/0'
 
@@ -199,4 +199,4 @@ port22_cidr_block: '0.0.0.0/0'
 #
 image_id: "ami-033a1ebf088e56e81"
 type: "t2.micro"
-instance_name: Rabbani-ec                
+instance_name: unguturi-vasu                
