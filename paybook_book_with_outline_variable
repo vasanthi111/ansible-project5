@@ -1,30 +1,61 @@
 ---
 - hosts: localhost
   become: yes
-  gather_facts: false #if you want to hide the host key verification option then use gather_facts: false #####
-  vars_files:
-    - secret.yaml
+  gather_facts: false
+  vars:
+    # AWS credentials
+    aws_access_key: "<YOUR_ACCESS_KEY>"
+    aws_secret_key: "<YOUR_SECRET_KEY>"
+
+    # VPC Configuration
+    vpc_name: "unguturi_vpc"
+    vpc_cidr_block: "11.0.0.0/16"
+    region: "us-east-1"
+
+    # Internet Gateway Configuration
+    igw_name: "unguturi_igw"
+
+    # Public Subnet Configuration
+    pubsubnet_name: "bhargavi_pub"
+    pubsubnet_cidr_block: "11.0.1.0/24"
+    pubzone: "us-east-1a"
+
+    # Private Subnet Configuration
+    pvtsubnet_name: "unguturi_pvt"
+    pvtsubnet_cidr_block: "11.0.2.0/24"
+    pvtzone: "us-east-1b"
+
+    # Route Table Configuration
+    pubroute_table_name: "unguturi_pub_rt"
+    pvtroute_table_name: "unguturi_pvt_rt"
+
+    # Security Group Configuration
+    security_group_name: "unguturi_sg"
+
+    # EC2 Instance Configuration
+    image_id: "ami-0ca9fb66e076a6e32" # Replace with your preferred AMI ID
+    type: "t2.micro"
+    instance_name: "unguturi-vasu"
+
   tasks:
 
-### VPC Creation ####
-
-    - ec2_vpc_net:
+    # Step 1: Create VPC
+    - name: Create VPC
+      ec2_vpc_net:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         cidr_block: "{{ vpc_cidr_block }}"
         name: "{{ vpc_name }}"
         region: "{{ region }}"
-        # enable dns support
         dns_support: yes
-        # enable dns hostnames
         dns_hostnames: yes
         tenancy: default
-        state: present  # to delete Vpc then replace absent instead of presnt
+        state: present
       register: vpc_result
 
-#### Internet gateway Creation #######
-
-    - ec2_vpc_igw:
+    # Step 2: Create Internet Gateway
+    - name: Create Internet Gateway
+      ec2_vpc_igw:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         vpc_id: "{{ vpc_result.vpc.id }}"
@@ -34,44 +65,39 @@
           Name: "{{ igw_name }}"
       register: igw_result
 
- ## create an vpc pub subnet
-
-
-    - ec2_vpc_subnet:
+    # Step 3: Create Public Subnet
+    - name: Create Public Subnet
+      ec2_vpc_subnet:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         vpc_id: "{{ vpc_result.vpc.id }}"
         region: "{{ region }}"
-        az: "{{ pubzone }}"      # az is the availability zone
+        az: "{{ pubzone }}"
         state: present
         cidr: "{{ pubsubnet_cidr_block }}"
-        # enable public ip
         map_public: yes
         resource_tags:
           Name: "{{ pubsubnet_name }}"
       register: pubsubnet_result
 
-    ## create an vpc pvt subnet
-
-
-    - ec2_vpc_subnet:
+    # Step 4: Create Private Subnet
+    - name: Create Private Subnet
+      ec2_vpc_subnet:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         vpc_id: "{{ vpc_result.vpc.id }}"
         region: "{{ region }}"
-        az: "{{ pvtzone }}"      # az is the availability zone
+        az: "{{ pvtzone }}"
         state: present
         cidr: "{{ pvtsubnet_cidr_block }}"
-        # enable public ip
         map_public: no
         resource_tags:
           Name: "{{ pvtsubnet_name }}"
       register: pvtsubnet_result
 
-## create an vpc pub route table
-
-
-    - ec2_vpc_route_table:
+    # Step 5: Create Public Route Table
+    - name: Create Public Route Table
+      ec2_vpc_route_table:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         vpc_id: "{{ vpc_result.vpc.id }}"
@@ -79,17 +105,16 @@
         state: present
         tags:
           Name: "{{ pubroute_table_name }}"
-        subnets: [ "{{ pubsubnet_result.subnet.id }}" ]
-        # create routes
+        subnets: 
+          - "{{ pubsubnet_result.subnet.id }}"
         routes:
           - dest: 0.0.0.0/0
             gateway_id: "{{ igw_result.gateway_id }}"
       register: public_route_table
 
-    ## create an vpc pvt route table
-
-
-    - ec2_vpc_route_table:
+    # Step 6: Create Private Route Table
+    - name: Create Private Route Table
+      ec2_vpc_route_table:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         vpc_id: "{{ vpc_result.vpc.id }}"
@@ -97,13 +122,13 @@
         state: present
         tags:
           Name: "{{ pvtroute_table_name }}"
-        subnets: [ "{{ pvtsubnet_result.subnet.id }}" ]
+        subnets: 
+          - "{{ pvtsubnet_result.subnet.id }}"
       register: private_route_table
 
-   ## create an vpc security groups
-
-
-    - ec2_group:
+    # Step 7: Create Security Groups
+    - name: Create Security Group
+      ec2_group:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         vpc_id: "{{ vpc_result.vpc.id }}"
@@ -114,17 +139,15 @@
         tags:
           Name: vasanthi-sg
         rules:
-        - proto: all
-          cidr_ip: 0.0.0.0/0
-          rule_desc: allow all traffic
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+            rule_desc: allow all traffic
       register: security_group_results
 
-
-   ## tasks file for ec2-launch ##
-
-
-    - ec2:
-        image: ami-0ca9fb66e076a6e32
+    # Step 8: Launch EC2 Instance
+    - name: Launch EC2 Instance
+      ec2:
+        image: "{{ image_id }}"
         instance_type: "{{ type }}"
         region: "{{ region }}"
         wait: yes
@@ -136,67 +159,4 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         instance_tags:
-                Name: "{{ instance_name }}"
-
-
-********************************************For outline variable file creation follow the below yaml script*******************************
-##After creation of this varible file go to the main script.yaml file and add this file name as by following script
-
----
-- hosts: localhost
-  become: yes
-  gather_facts: false #if you want to hide the host key verification option then use gather_facts: false #####
-  vars_files:
-    - secret.yaml
-  tasks:
-########################################################################
-
-##AWS credentials
-#
-aws_access_key: " "
-aws_secret_key: " "
-title: "ARTH"
-
-# VPC configuration
-#
-vpc_name: unguturi_vpc
-vpc_cidr_block: '11.0.0.0/16'
-region: "us-east-1"
-
-
-# Internet Gateway configuration
-#
-igw_name: unguturi_igw
-
-# Public Subnet configuration
-#
-pubsubnet_name: bhargavi_pub
-pubsubnet_cidr_block: '11.0.1.0/24'
-pubzone: "us-east-1a"
-
-# Private Subnet configuration
-#
-pvtsubnet_name: unguturi_pvt
-pvtsubnet_cidr_block: '11.0.2.0/24'
-pvtzone: "us-east-1b"
-
-# Public Route Table configuration
-#
-pubroute_table_name: unguturi_pub_rt
-
-# Private Route Table configuration
-#
-pvtroute_table_name: unguturi_pvt_rt
-
-# Security Group configuration
-#
-security_group_name: unguturi_sg
-destination_cidr_block: '0.0.0.0/0'
-port22_cidr_block: '0.0.0.0/0'
-
-
-# EC2 Instance configuration
-#
-image_id: "ami-033a1ebf088e56e81"
-type: "t2.micro"
-instance_name: unguturi-vasu                
+          Name: "{{ instance_name }}"
