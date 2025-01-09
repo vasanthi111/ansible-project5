@@ -8,7 +8,7 @@
         aws_access_key: 
         aws_secret_key: 
         cidr_block: 10.0.0.0/16
-        name: bhargavi-vpc
+        name: vasanthi-vpc
         region: us-east-1
         state: present  # to delete Vpc then replace absent instead of presnt
       register: vpc_result
@@ -39,7 +39,7 @@
         # enable public ip
         map_public: yes
         resource_tags:
-          Name: bhargavi-pub
+          Name: vasanthi-pub
       register: pubsubnet_result
 
     ## create an vpc pvt subnet
@@ -56,7 +56,7 @@
         # enable public ip
         map_public: no
         resource_tags:
-          Name: bhargavi-pvt
+          Name: vasanthi-pvt
       register: pvtsubnet_result
 
 ## create an vpc pub route table
@@ -69,7 +69,7 @@
         region: us-east-1
         state: present
         tags:
-          Name: bhargavi-pub-rt
+          Name: vasanthi-pub-rt
         subnets: [ "{{ pubsubnet_result.subnet.id }}" ]
         # create routes
         routes:
@@ -87,7 +87,7 @@
         region: us-east-1
         state: present
         tags:
-          Name: bhargavi-pvt-rt
+          Name: vasanthi-pvt-rt
         subnets: [ "{{ pvtsubnet_result.subnet.id }}" ]
       register: private_route_table
 
@@ -100,10 +100,10 @@
         vpc_id: "{{ vpc_result.vpc.id }}"
         region: us-east-1
         state: present
-        name: bhargavi-sg
+        name: vasanthi-sg
         description: allow
         tags:
-          Name: bairagoni-sg
+          Name: mythrika-sg
         rules:
         - proto: all
           cidr_ip: 0.0.0.0/0
@@ -127,4 +127,4 @@
         aws_access_key: 
         aws_secret_key: 
         instance_tags:
-                Name: Bhargavi            
+                Name: vasanthi            
