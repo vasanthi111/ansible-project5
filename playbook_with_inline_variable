@@ -9,13 +9,13 @@
     - aws_access_key: " "
     - aws_secret_key: " "
       title: "ARTH"
-    - vpc_name: bhargavi_vpc
-    - igw_name: bhargavi_igw
-    - pubsubnet_name: bhargavi_pub
-    - pvtsubnet_name: bhargavi_pvt
-    - pubroute_table_name: bhargavi_pub_rt
-    - pvtroute_table_name: bhargavi_pvt_rt
-    - security_group_name: bhargavi_sg
+    - vpc_name: vasu_vpc
+    - igw_name: vasu_igw
+    - pubsubnet_name: vasu_pub
+    - pvtsubnet_name: vasu_pvt
+    - pubroute_table_name: vasu_pub_rt
+    - pvtroute_table_name: vasu_pvt_rt
+    - security_group_name: vasu_sg
     - vpc_cidr_block: '11.0.0.0/16'
     - pubsubnet_cidr_block: '11.0.1.0/24'
     - pvtsubnet_cidr_block: '11.0.2.0/24'
@@ -26,7 +26,7 @@
     - pvtzone: "us-east-1b"
     - image_id: "ami-0ca9fb66e076a6e32"
     - type: "t2.micro"
-    - instance_name: bhargavi-ec
+    - instance_name: ansible_ec
 
   tasks:
 
@@ -136,7 +136,7 @@
         name: "{{ security_group_name }}"
         description: allow
         tags:
-          Name: bhargavi-sg
+          Name: vasu-sg
         rules:
         - proto: all
           cidr_ip: 0.0.0.0/0
