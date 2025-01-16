@@ -16,7 +16,7 @@
     igw_name: "unguturi_igw"
 
     # Public Subnet Configuration
-    pubsubnet_name: "bhargavi_pub"
+    pubsubnet_name: "vasanthi_pub"
     pubsubnet_cidr_block: "11.0.1.0/24"
     pubzone: "us-east-1a"
 
